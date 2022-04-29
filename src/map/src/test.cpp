@@ -15,7 +15,7 @@ int main(int argc, char** argv){
     ros::NodeHandle nh;
 
     std::shared_ptr<int8_map> map_ptr_ = std::make_shared<int8_map>();
-    map_ptr_->init("map",0.2,0.3,10,nh);
+    map_ptr_->init("map",0.5,0.5,10,nh);
 
     ros::spin();
 

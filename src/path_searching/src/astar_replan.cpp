@@ -141,7 +141,7 @@ void AstarReplan::execCallback(const ros::TimerEvent& e){
       current_pt(0) = pt(0); current_pt(1) = pt(1);
     
 
-      if(t >= tmp){// && distance_error < 0.2 && theta_error<0.2
+      if(t >= tmp && distance_error < 0.02 && theta_error<0.1){// && distance_error < 0.2 && theta_error<0.2
         //stop.
         {
           geometry_msgs::Twist cmd_vel;
@@ -168,7 +168,7 @@ void AstarReplan::execCallback(const ros::TimerEvent& e){
           ref_Traj(ref_traj);
 
           rotate_distance = ref_traj.col(0)(2,0) - pose(2);
-          ROS_WARN_STREAM(""<<ref_traj.col(0)(2,0)<<" "<<pose(2));
+          //ROS_WARN_STREAM(""<<ref_traj.col(0)(2,0)<<" "<<pose(2));
           if(abs(rotate_distance) > max_rotate_threshold){
              //ROS_ERROR("the angle between current theta and ref theta is too big.");
             //  changeExecState(STATE::ROTATE);
@@ -351,7 +351,7 @@ void AstarReplan::genTraj(vector<Vector2d>& path){
     start_end_derivatives.push_back({0,0,0});
 
     //ROS_WARN_STREAM("ctrl_pts size : "<<ctrl_pts.size());
-    double ts = 1;
+    double ts = 2;
     NonUniformBspline::parameterizeToBspline(ts, points, start_end_derivatives, ctrl_pts);
     NonUniformBspline init(ctrl_pts, 3, ts);
 
@@ -505,7 +505,7 @@ void AstarReplan::get_cartograper_pose()
     pose(0) = x;
     pose(1) = y;
     pose(2) = tf::getYaw(carto_tf.getRotation());
-    ROS_WARN_STREAM("cur pose is "<<pose(0)<<" "<<pose(1)<<" "<<pose(2));
+    //ROS_WARN_STREAM("cur pose is "<<pose(0)<<" "<<pose(1)<<" "<<pose(2));
 }
 
 void AstarReplan::PID(Vector3d path_point,Vector2d& u){
@@ -516,16 +516,18 @@ void AstarReplan::PID(Vector3d path_point,Vector2d& u){
     distance_error = sqrt(pow(dx,2) + pow(dy,2));
     distance_error_dot = distance_error - 2*last_distance_error + llast_distance_error;
     u(0) = kp_v * distance_error  + kd_v * distance_error_dot;
-    // if(u(0) > 0.3){
-    //   u(0) = 0.3;
-    // }
-    // if(u(0) < -0.3){
-    //   u(0) = -0.3;
-    // }
+    if(u(0) > 0.3){
+      u(0) = 0.3;
+    }
+    if(u(0) < -0.3){
+      u(0) = -0.3;
+    }
 
     //angular velocity
     double target_theta = atan2(dy,dx);  double cur_theta = pose(2);
     double theta_error = target_theta - cur_theta;
+    ROS_ERROR_STREAM("distance error is "<<distance_error);
+    ROS_ERROR_STREAM("theta error is "<<theta_error);
 
     //chech weather the angle sudden change.
     //check which one is short path. Clockwise or counterclockwise.
@@ -543,14 +545,14 @@ void AstarReplan::PID(Vector3d path_point,Vector2d& u){
 
 
     double theta_error_dot = theta_error - 2*last_theta_error + llast_theta_error;
-    u(1) = kp_theta * theta_error + kv_theta * theta_error_dot;
+    u(1) = kp_theta * theta_error + kd_theta * theta_error_dot;
     double w_max = 0.5;
-    // if(u(1)>w_max){
-    //   u(1) = w_max;
-    // }
-    // if(u(1) < -w_max){
-    //   u(1) = -w_max;
-    // }
+    if(u(1)>w_max){
+      u(1) = w_max;
+    }
+    if(u(1) < -w_max){
+      u(1) = -w_max;
+    }
 
     llast_distance_error = last_distance_error;
     last_distance_error = distance_error;

@@ -153,7 +153,7 @@ class AstarReplan
         double min_rotate_threshold = 0.1;
 
         //pid parameter
-        double kp_v = 0.2;
+        double kp_v = 0.6;
         double kd_v = 0.1;
         double ki_v = 0.0;
 
@@ -162,8 +162,8 @@ class AstarReplan
         double last_distance_error = 0.0;
         double llast_distance_error = 0.0;   //last last distance error
 
-        double kp_theta = 2;
-        double kv_theta = 1;
+        double kp_theta = -0.3;
+        double kd_theta = -0.15;
         double ki_theta = 0.0;
         
         double theta_error = 0.0;
