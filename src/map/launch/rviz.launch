@@ -1,0 +1,4 @@
+
+ <launch>
+     <node name="rviz_visualisation" pkg="rviz" type="rviz" output="log" args="-d $(find map)/rviz_config/map_test.rviz" />
+</launch>
