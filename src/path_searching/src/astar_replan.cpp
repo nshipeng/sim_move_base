@@ -26,13 +26,16 @@ void AstarReplan::init(ros::NodeHandle& nh_){
     exec_timer_ = nh_.createTimer(ros::Duration(0.01), &AstarReplan::execCallback, this);
 
     ds_ptr_ = std::make_shared<DoubleS>(0.5,0.5,0.5);
+
+    //ref_traj_visual_tools =  std::make_shared< rviz_visual_tools::RvizVisualTools>("map","/ref_points");
     
 }
 
 void AstarReplan::waypointCallback(const geometry_msgs::PoseStamped::ConstPtr& msg){
 
-  // ROS_WARN_STREAM("nav goal pos x is : "<<msg->pose.position.x);
-  // ROS_WARN_STREAM("nav goal pos y is : "<<msg->pose.position.y);
+  ROS_WARN_STREAM("nav goal pos x is : "<<msg->pose.position.x);
+  ROS_WARN_STREAM("nav goal pos y is : "<<msg->pose.position.y);
+  exit(0);
 
   trigger_ = true;
   have_target = true;
@@ -139,7 +142,6 @@ void AstarReplan::execCallback(const ros::TimerEvent& e){
       t = std::min(t, tmp);
       Vector3d  pt = nurbs.evaluateDeBoorT(t);
       current_pt(0) = pt(0); current_pt(1) = pt(1);
-    
 
       if(t >= tmp && distance_error < 0.02 && theta_error<0.1){// && distance_error < 0.2 && theta_error<0.2
         //stop.
@@ -179,8 +181,18 @@ void AstarReplan::execCallback(const ros::TimerEvent& e){
           Vector2d u;
 
           //MPC(x0,ref_traj,u);
-          //DIFF_MPC(x0,ref_traj,u);
-          PID(path_point,u);
+          bool use_mpc = false;
+          if(use_mpc){
+            auto t_start = std::chrono::high_resolution_clock::now();
+            DIFF_MPC(x0,ref_traj,vw,u);
+            auto t_end = std::chrono::high_resolution_clock::now();
+            auto t_ = std::chrono::duration<double>(t_end- t_start);
+            double t = t_.count();
+            ROS_WARN_STREAM("MPC controller spent time is "<<t);
+          }else{
+               PID(path_point,u);
+          }
+       
           ROS_WARN_STREAM("u is \n"<<u);
           {
             geometry_msgs::Twist cmd_vel;
@@ -191,6 +203,7 @@ void AstarReplan::execCallback(const ros::TimerEvent& e){
             cmd_vel.angular.y = 0.0;
             cmd_vel.angular.z = u(1);
             cmd_vel_pub_.publish(cmd_vel);
+            vw = u;
           }
           //nextState( x0,  u, pose);
           //broadcasterTf(pose);
@@ -413,7 +426,21 @@ void AstarReplan::ref_Traj(Eigen::Matrix<double, 3, 10> & ref_traj){
 
             p_prev = p;
 
+            // Vector3d x_axis;   x_axis<< dx,   dy,   0.0;        x_axis.normalize();
+            // Vector3d z_axis;   z_axis<< 0.0,  0.0,  1.0;
+            // Vector4d y_axis;   y_axis = z_axis.cross(x_axis);
+            // Vector3d pos;      pos<<p_prev(0), p_prev(1), 0.0; 
+            // Matrix4d pose;     pose.setIdentity();
+            // pose.block<3,1>(0,0) = x_axis;
+            // pose.block<3,1>(0,1) = y_axis;
+            // pose.block<3,1>(0,2) = z_axis;
+            // pose.block<3,1>(0,3) = pos;
+
+
+
     }
+
+
 }
 
 void AstarReplan::model(const Ref<VectorXd> x0, const Ref<VectorXd> u,  Ref<VectorXd> x_out){
@@ -505,7 +532,11 @@ void AstarReplan::get_cartograper_pose()
     pose(0) = x;
     pose(1) = y;
     pose(2) = tf::getYaw(carto_tf.getRotation());
-    //ROS_WARN_STREAM("cur pose is "<<pose(0)<<" "<<pose(1)<<" "<<pose(2));
+
+    Matrix4d pose_in_map;    pose_in_map.setIdentity();
+    
+
+    ROS_WARN_STREAM("cur pose is "<<pose(0)<<" "<<pose(1)<<" "<<pose(2));
 }
 
 void AstarReplan::PID(Vector3d path_point,Vector2d& u){

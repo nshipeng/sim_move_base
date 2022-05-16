@@ -41,7 +41,7 @@ void NonUniformBspline::setUniformBspline(const Eigen::MatrixXd& points, const i
   n_ = points.rows() - 1;
   m_ = n_ + p_ + 1;
 
-  u_ = Eigen::VectorXd::Zero(m_ + 1);
+  u_ = Eigen::VectorXd::Zero(m_ + 1); //m+1个 knot point
   for (int i = 0; i <= m_; ++i) {
 
     if (i <= p_) {

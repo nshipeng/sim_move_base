@@ -29,7 +29,9 @@ static size_t MPC(Eigen::Matrix<double, 3, 1>x0, Eigen::Matrix<double, 3, 10> xR
      double dt = 0.1;
     B << dt* std::cos(theta),    -dt* std::sin(theta),   0,
          dt* std::sin(theta),     dt* std::cos(theta),   0,
-         0,                      0,                     dt*1;
+         0,                       0,                     dt*1;
+
+    Eigen::Matrix<double, 3, 1> O = -A *x0;
 
     Eigen::Matrix<double, 3, 1> xMax;
     Eigen::Matrix<double, 3, 1> xMin;
@@ -61,7 +63,7 @@ static size_t MPC(Eigen::Matrix<double, 3, 1>x0, Eigen::Matrix<double, 3, 10> xR
     castMPCToQPHessian<3, 3>(Q, R, mpcWindow, hessian);
     castMPCToQPGradient<3, 3, 10>(Q, xRef, mpcWindow,gradient);
     castMPCToQPConstraintMatrix<3, 3,3,3>(A, B, mpcWindow, linearMatrix);
-    castMPCToQPConstraintVectors<3, 3, 3>(xMax, xMin, uMax, uMin, x0, mpcWindow, lowerBound, upperBound);
+    castMPCToQPConstraintVectors<3, 3, 3>(xMax, xMin, uMax, uMin, x0,O, mpcWindow, lowerBound, upperBound);
     //  std::cout<<"Hessian \n"<<hessian<<std::endl;
     //  std::cout<<"gradient \n"<<gradient<<std::endl;
     //  std::cout<<"linearMatrix \n"<<linearMatrix<<std::endl;
@@ -100,13 +102,22 @@ static size_t MPC(Eigen::Matrix<double, 3, 1>x0, Eigen::Matrix<double, 3, 10> xR
 
 }
 
-static size_t DIFF_MPC(Eigen::Matrix<double, 3, 1>x0, Eigen::Matrix<double, 3, 10> xRef, Vector2d& u){  
-     Eigen::Matrix<double, 3, 3> A; A.setIdentity();
-     Eigen::Matrix<double, 3, 2> B; 
+static size_t DIFF_MPC(Eigen::Matrix<double, 3, 1>x0, Eigen::Matrix<double, 3, 10> xRef, Vector2d& u0, Vector2d& u){  
+     Eigen::Matrix<double, 3, 3> A;   
+     Eigen::Matrix<double, 3, 2> B;
+     double dt = 0.1;
      double theta = x0(2,0);
-     B<< 0.1* std::cos(theta),    0,
-         0.1* std::sin(theta),    0,
-         0,                       0.1*1;
+
+     A<<1,   0,   -u0(0)* sin(theta) * dt,
+        0,   1,    u0(0)* cos(theta )* dt,
+        0,   0,     1;
+ 
+     B<< dt* std::cos(theta),    0,
+         dt* std::sin(theta),    0,
+         0,                      dt*1;
+
+
+    Eigen::Matrix<double, 3, 1> O = -A *x0 * dt;
 
     Eigen::Matrix<double, 3, 1> xMax;
     Eigen::Matrix<double, 3, 1> xMin;
@@ -114,15 +125,17 @@ static size_t DIFF_MPC(Eigen::Matrix<double, 3, 1>x0, Eigen::Matrix<double, 3, 1
     Eigen::Matrix<double, 2, 1> uMin;
     xMin <<  -OsqpEigen::INFTY, -OsqpEigen::INFTY,-OsqpEigen::INFTY;
     xMax <<  OsqpEigen::INFTY,   OsqpEigen::INFTY, OsqpEigen::INFTY;
-    uMin << -0.2, -0.5;
-    uMax <<  0.2,  0.5;
+    uMin << -OsqpEigen::INFTY, -OsqpEigen::INFTY;
+    uMax <<  OsqpEigen::INFTY,  OsqpEigen::INFTY;
+    //uMin << -0.5, -1.5;
+    //uMax <<  0.5,  1.5;
 
 
     // allocate the weight matrices
     Eigen::DiagonalMatrix<double, 3> Q;
     Eigen::DiagonalMatrix<double, 2> R;
     Q.diagonal() << 100,  100, 100;
-    R.diagonal() << 0.1, 0.1;
+    R.diagonal() << 10, 10;
 
     // allocate QP problem matrices and vectores
     Eigen::SparseMatrix<double> hessian;
@@ -138,7 +151,7 @@ static size_t DIFF_MPC(Eigen::Matrix<double, 3, 1>x0, Eigen::Matrix<double, 3, 1
     castMPCToQPHessian<3, 2>(Q, R, mpcWindow, hessian);
     castMPCToQPGradient<3, 3, 10>(Q, xRef, mpcWindow,gradient);
     castMPCToQPConstraintMatrix<3,3,3,2>(A, B, mpcWindow, linearMatrix);
-    castMPCToQPConstraintVectors<3, 2, 3>(xMax, xMin, uMax, uMin, x0, mpcWindow,lowerBound, upperBound);
+    castMPCToQPConstraintVectors<3, 2, 3>(xMax, xMin, uMax, uMin, x0, O, mpcWindow,lowerBound, upperBound);
 //     std::cout<<"Hessian \n"<<hessian<<std::endl;
 //     std::cout<<"gradient \n"<<gradient<<std::endl;
 //     std::cout<<"linearMatrix \n"<<linearMatrix<<std::endl;
@@ -171,7 +184,7 @@ static size_t DIFF_MPC(Eigen::Matrix<double, 3, 1>x0, Eigen::Matrix<double, 3, 1
     // get the controller input
     QPSolution = solver.getSolution();
     ctr = QPSolution.block(3 * (mpcWindow + 1), 0, 2, 1);
-    std::cout<<"QPSolution  \n"<<QPSolution<<std::endl;
+    //std::cout<<"QPSolution  \n"<<QPSolution<<std::endl;
     u = ctr;
     return 0;
 

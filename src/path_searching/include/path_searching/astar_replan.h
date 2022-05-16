@@ -26,6 +26,8 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 
+#include <rviz_visual_tools/rviz_visual_tools.h>
+
 #include <thread>
 #include "path_searching/astar.h"
 #include "utils/planning_visualization.h"
@@ -38,6 +40,7 @@
 
 
 using namespace Eigen;
+using namespace rviz_visual_tools;
 
 enum STATE{
     INIT,
@@ -101,7 +104,8 @@ class AstarReplan
         Vector2d goal_pt;
         Vector2d current_pt;
 
-         Vector3d pose;
+        Vector3d pose;
+        Vector2d vw;     //represent v and w  
 
         STATE state;
         bool trigger_, have_target, receive_map;
@@ -170,6 +174,9 @@ class AstarReplan
         double theta_error_dot = 0.0;
         double last_theta_error = 0.0;
         double llast_theta_error = 0.0;
+
+        //for visualization
+         rviz_visual_tools::RvizVisualToolsPtr ref_traj_visual_tools;
 
         
 };

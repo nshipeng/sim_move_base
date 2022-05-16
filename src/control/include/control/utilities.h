@@ -119,7 +119,9 @@ void castMPCToQPConstraintVectors(const Eigen::Matrix<double, x_rows, 1> &xMax,
                                   const Eigen::Matrix<double, u_rows, 1> &uMax,
                                   const Eigen::Matrix<double, u_rows, 1> &uMin,
                                   const Eigen::Matrix<double, x0_rows, 1> &x0,
-                                  int mpcWindow, Eigen::VectorXd &lowerBound,
+                                  const Eigen::Matrix<double, x0_rows, 1> &O,
+                                  int mpcWindow, 
+                                  Eigen::VectorXd &lowerBound,
                                   Eigen::VectorXd &upperBound) {
   // Get argument vector lenghts
   const int xMax_size = xMax.size();
@@ -150,8 +152,13 @@ void castMPCToQPConstraintVectors(const Eigen::Matrix<double, x_rows, 1> &xMax,
       Eigen::MatrixXd::Zero(x0_size * (mpcWindow + 1), 1);
   Eigen::VectorXd upperEquality;
   lowerEquality.block(0, 0, x0_size, 1) = -x0;
+  for(int i = 1;i<=mpcWindow;++i){
+    lowerEquality.block(x0_size * i, 0, x0_size,1) = -O;  //应该在这里修改为TO
+  }
+
   upperEquality = lowerEquality;
   lowerEquality = lowerEquality;
+  std::cout<<"lowerEquality "<<lowerEquality<<std::endl;
 
   // merge inequality and equality vectors
   lowerBound = Eigen::MatrixXd::Zero(
