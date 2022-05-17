@@ -1,4 +1,4 @@
-image: /home/robot/catkin_ws/src/map/map/roommap.pgm
+image: /home/nshipeng/sim_move_base/src/map/maps/roommap.pgm
 resolution: 0.050000
 origin: [-17.183958, -6.920056, 0.0]
 negate: 0

@@ -1,11 +1,7 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(path_searching)
 
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  rospy
-  std_msgs
-)
+#set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}")
 
 
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/../traj_opt/src DIR_TRAJ)
@@ -27,6 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
   traj_opt
   map
   control
+  rviz_visual_tools
 )
 
 find_package(Eigen3 REQUIRED)

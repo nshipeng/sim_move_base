@@ -5,6 +5,7 @@
 
 #include "path_searching/astar_replan.h"
 
+
 void AstarReplan::init(ros::NodeHandle& nh_){
     nh = nh_;
     state = STATE::INIT;
@@ -16,6 +17,8 @@ void AstarReplan::init(ros::NodeHandle& nh_){
 
     astar_ptr_ = std::make_shared<Astar>();
     visual_help_ptr_ = std::make_shared<PlanningVisualization>(nh_, "map");
+    ref_traj_visual_tools =  std::make_shared< rviz_visual_tools::RvizVisualTools>("map","/ref_traj_points");
+    //ref_traj_visual_tools .reset(new rviz_visual_tools::RvizVisualTools("map","/rviz_visual_markers"));
     goal_sub_ = nh_.subscribe("/move_base_simple/goal", 1,  &AstarReplan::waypointCallback,this);
     global_costmap_sub_ = nh_.subscribe("/global_costmap", 1,  &AstarReplan::updateMapCallback,this);
     init_pose_sub_ = nh_.subscribe("/initialpose", 1,  &AstarReplan::initPoseCallback,this);
@@ -27,7 +30,7 @@ void AstarReplan::init(ros::NodeHandle& nh_){
 
     ds_ptr_ = std::make_shared<DoubleS>(0.5,0.5,0.5);
 
-    //ref_traj_visual_tools =  std::make_shared< rviz_visual_tools::RvizVisualTools>("map","/ref_points");
+    
     
 }
 
@@ -35,7 +38,7 @@ void AstarReplan::waypointCallback(const geometry_msgs::PoseStamped::ConstPtr& m
 
   ROS_WARN_STREAM("nav goal pos x is : "<<msg->pose.position.x);
   ROS_WARN_STREAM("nav goal pos y is : "<<msg->pose.position.y);
-  exit(0);
+  //exit(0);
 
   trigger_ = true;
   have_target = true;
@@ -115,6 +118,10 @@ void AstarReplan::execCallback(const ros::TimerEvent& e){
 
       get_cartograper_pose();
       start_pt(0) = pose(0); start_pt(1) = pose(1);
+      ROS_WARN_STREAM("Start point"<<start_pt(0)<<"  "<<start_pt(1));
+      ROS_WARN_STREAM("End point "<<goal_pt(0)<<" "<<goal_pt(1));
+      //exit(0);
+    
       path = astar_ptr_->plan(start_pt,goal_pt);
       auto t_end = high_resolution_clock::now();
       auto t_ = std::chrono::duration<double>(t_end - t_s);
@@ -181,7 +188,7 @@ void AstarReplan::execCallback(const ros::TimerEvent& e){
           Vector2d u;
 
           //MPC(x0,ref_traj,u);
-          bool use_mpc = false;
+          bool use_mpc = true;
           if(use_mpc){
             auto t_start = std::chrono::high_resolution_clock::now();
             DIFF_MPC(x0,ref_traj,vw,u);
@@ -412,6 +419,8 @@ void AstarReplan::ref_Traj(Eigen::Matrix<double, 3, 10> & ref_traj){
     t = std::min(t, tmp);
 
     Vector2d p_prev; p_prev<<pose(0),pose(1);
+    vector<Isometry3d> ref_traj_axis;
+    ref_traj_visual_tools->deleteAllMarkers();
     for(double dt = 0.0; dt<1; dt+=0.1){
             Vector3d  pt = nurbs.evaluateDeBoorT(t + dt);
             Vector2d p;  p(0) =pt(0); p(1) = pt(1);
@@ -426,21 +435,19 @@ void AstarReplan::ref_Traj(Eigen::Matrix<double, 3, 10> & ref_traj){
 
             p_prev = p;
 
-            // Vector3d x_axis;   x_axis<< dx,   dy,   0.0;        x_axis.normalize();
-            // Vector3d z_axis;   z_axis<< 0.0,  0.0,  1.0;
-            // Vector4d y_axis;   y_axis = z_axis.cross(x_axis);
-            // Vector3d pos;      pos<<p_prev(0), p_prev(1), 0.0; 
-            // Matrix4d pose;     pose.setIdentity();
-            // pose.block<3,1>(0,0) = x_axis;
-            // pose.block<3,1>(0,1) = y_axis;
-            // pose.block<3,1>(0,2) = z_axis;
-            // pose.block<3,1>(0,3) = pos;
-
-
-
+            Vector3d x_axis;   x_axis<< dx,   dy,   0.0;        x_axis.normalize();
+            Vector3d z_axis;   z_axis<< 0.0,  0.0,  1.0;
+            Vector3d y_axis;   y_axis = z_axis.cross(x_axis);
+            Vector3d pos;      pos<<p_prev(0), p_prev(1), 0.0; 
+            Matrix4d pose;     pose.setIdentity();
+            pose.block<3,1>(0,0) = x_axis;
+            pose.block<3,1>(0,1) = y_axis;
+            pose.block<3,1>(0,2) = z_axis;
+            pose.block<3,1>(0,3) = pos;
+            ref_traj_axis.push_back(Isometry3d(pose));
     }
-
-
+    rviz_show_ref_Traj(ref_traj_axis);
+    ref_traj_axis.clear();
 }
 
 void AstarReplan::model(const Ref<VectorXd> x0, const Ref<VectorXd> u,  Ref<VectorXd> x_out){
@@ -593,6 +600,17 @@ void AstarReplan::PID(Vector3d path_point,Vector2d& u){
 
 }
 
+
+ void AstarReplan::rviz_show_ref_Traj(const vector<Isometry3d>& axis_points){
+    for(int i=0;i<axis_points.size();++i){
+        //if(i%5!=0) continue;
+       ref_traj_visual_tools->publishXArrow(axis_points[i]);
+       ref_traj_visual_tools->publishYArrow(axis_points[i]);
+       ref_traj_visual_tools->publishZArrow(axis_points[i]);
+    }
+    ref_traj_visual_tools->trigger();
+
+ }
   
 
 

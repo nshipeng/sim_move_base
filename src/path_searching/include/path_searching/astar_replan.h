@@ -1,9 +1,6 @@
 /*
  * @Description: 
  * @Autor: 
- * @Date: 2021-12-10 15:26:27
- * @LastEditors: Please set LastEditors
- * @LastEditTime: 2022-02-11 14:51:29
  */
 #ifndef _ASTAR_REPLAN_H_
 #define _ASTAR_REPLAN_H_
@@ -25,9 +22,6 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf/transform_listener.h>
-
-#include <rviz_visual_tools/rviz_visual_tools.h>
-
 #include <thread>
 #include "path_searching/astar.h"
 #include "utils/planning_visualization.h"
@@ -36,11 +30,12 @@
 
 #include "control/rk4.h"
 #include "control/mpc.h"
+#include <rviz_visual_tools/rviz_visual_tools.h>
 
 
 
 using namespace Eigen;
-using namespace rviz_visual_tools;
+
 
 enum STATE{
     INIT,
@@ -83,6 +78,7 @@ class AstarReplan
 
         //function for traj fllowing.
         void ref_Traj(Eigen::Matrix<double, 3, 10> & ref_traj);
+        void rviz_show_ref_Traj(const vector<Isometry3d>& axis_points);
         void mpc_control( Eigen::Matrix<double, 3, 1>&x0, Eigen::Matrix<double, 3, 20> & ref_traj,double& u);
         void broadcasterTf(Ref<VectorXd> state);
 
@@ -177,6 +173,7 @@ class AstarReplan
 
         //for visualization
          rviz_visual_tools::RvizVisualToolsPtr ref_traj_visual_tools;
+        
 
         
 };

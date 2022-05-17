@@ -17,6 +17,8 @@
   <build_depend>map</build_depend>
   <build_depend>control</build_depend>
   <build_depend>tf2</build_depend>
+  <build_depend>rviz_visual_tools</build_depend>
+  
 
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
@@ -26,6 +28,8 @@
   <build_export_depend>map</build_export_depend>
   <build_export_depend>control</build_export_depend>
   <build_export_depend>tf2</build_export_depend>
+  <build_export_depend>rviz_visual_tools</build_export_depend>
+
 
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
@@ -35,6 +39,8 @@
   <exec_depend>map</exec_depend>
   <exec_depend>control</exec_depend>
   <exec_depend>tf2</exec_depend>
+  <exec_depend>rviz_visual_tools</exec_depend>
+
 
 
 

@@ -117,7 +117,9 @@ static size_t DIFF_MPC(Eigen::Matrix<double, 3, 1>x0, Eigen::Matrix<double, 3, 1
          0,                      dt*1;
 
 
-    Eigen::Matrix<double, 3, 1> O = -A *x0 * dt;
+    //Eigen::Matrix<double, 3, 1> O = -A *x0 * dt;
+    Eigen::Matrix<double, 3, 1> O ;
+    O.col(0)<<0.0,0.0,0.0;
 
     Eigen::Matrix<double, 3, 1> xMax;
     Eigen::Matrix<double, 3, 1> xMin;
@@ -127,15 +129,15 @@ static size_t DIFF_MPC(Eigen::Matrix<double, 3, 1>x0, Eigen::Matrix<double, 3, 1
     xMax <<  OsqpEigen::INFTY,   OsqpEigen::INFTY, OsqpEigen::INFTY;
     uMin << -OsqpEigen::INFTY, -OsqpEigen::INFTY;
     uMax <<  OsqpEigen::INFTY,  OsqpEigen::INFTY;
-    //uMin << -0.5, -1.5;
-    //uMax <<  0.5,  1.5;
+    //uMin << -0.2, -0.3;
+    //uMax <<  0.2,  0.3;
 
 
     // allocate the weight matrices
     Eigen::DiagonalMatrix<double, 3> Q;
     Eigen::DiagonalMatrix<double, 2> R;
-    Q.diagonal() << 100,  100, 100;
-    R.diagonal() << 10, 10;
+    Q.diagonal() << 100,  100, 0.1;
+    R.diagonal() << 0.1, 20;
 
     // allocate QP problem matrices and vectores
     Eigen::SparseMatrix<double> hessian;

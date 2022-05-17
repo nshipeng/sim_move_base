@@ -12,6 +12,7 @@ Panels:
         - /TF1
         - /TF1/Frames1
         - /LaserScan1
+        - /MarkerArray2
       Splitter Ratio: 0.5
     Tree Height: 416
   - Class: rviz/Selection
@@ -98,7 +99,7 @@ Visualization Manager:
       Marker Topic: /planning_vis/trajectory
       Name: Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/TF
@@ -140,10 +141,10 @@ Visualization Manager:
                   {}
                 laser_link:
                   {}
-              left_wheel_link:
-                {}
-              right_wheel_link:
-                {}
+                left_wheel_link:
+                  {}
+                right_wheel_link:
+                  {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -161,9 +162,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 0
       Min Color: 0; 0; 0
-      Min Intensity: 0
       Name: LaserScan
       Position Transformer: XYZ
       Queue Size: 10
@@ -175,6 +174,14 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /ref_traj_points
+      Name: MarkerArray
+      Namespaces:
+        {}
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
@@ -204,25 +211,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.6843682527542114
+      Distance: 10.479324340820312
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.19591876864433289
-        Y: 0.12390860915184021
-        Z: -0.3162165582180023
+        X: 1.0912872552871704
+        Y: -2.1772255897521973
+        Z: -0.5791866183280945
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.274796962738037
+      Pitch: 1.5147967338562012
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.658564567565918
+      Yaw: 4.698564529418945
     Saved: ~
 Window Geometry:
   Displays:
